@@ -19,11 +19,11 @@ create table category (
 create table program (
   id int unsigned primary key auto_increment not null,
   title varchar(255) not null,
-  synopsis text not null,
-  poster varchar(255) not null,
-  country varchar(255) not null,
-  year int not null,
-  category_id int unsigned not null,
+  synopsis text null,
+  poster varchar(255) null,
+  country varchar(255) null,
+  year int null,
+  category_id int unsigned null,
   foreign key (category_id) references category(id)
 );
 

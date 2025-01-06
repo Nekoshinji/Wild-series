@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
 interface programsProps {
   id: number;
   title: string;
-  poster: string;
-  synopsis: string;
-  country: string;
-  year: string;
+  // poster: string;
+  // synopsis: string;
+  // country: string;
+  // year: string;
 }
 
 const Programs = () => {
   const [programs, setPrograms] = useState<programsProps[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:3310/api/programs")
+    fetch(`${import.meta.env.VITE_API_URL}/api/programs`)
       .then((response) => response.json())
-      .then((data) => setPrograms(data))
+      .then((data: programsProps[]) => setPrograms(data))
       .catch((error) =>
         console.error("Erreur lors de la récupération des données:", error),
       );
@@ -25,21 +27,16 @@ const Programs = () => {
   }
 
   return (
-    <div>
-      <h1>Liste des Séries</h1>
+    <>
+      <Link to={"/programs/new"}>Ajouter</Link>
       <ul>
         {programs.map((program) => (
           <li key={program.id}>
-            <h2>{program.title}</h2>
-            <img src={program.poster} alt={program.title} />
-            <p>{program.synopsis}</p>
-            <p>
-              {program.country} - {program.year}
-            </p>
+            <Link to={`/programs/${program.id}`}>{program.title}</Link>
           </li>
         ))}
       </ul>
-    </div>
+    </>
   );
 };
 

@@ -26,25 +26,123 @@ const programs = [
   },
 ];
 
-// Declare the action
+const browse: RequestHandler = async (req, res, next) => {
+  try {
+    // Fetch all programs
+    const programs = await ProgramRepository.readAll();
 
-const browse: RequestHandler = async (req, res) => {
-  const programsFromDB = await ProgramRepository.readAll();
-
-  res.json(programsFromDB);
-};
-
-// Export it to import it somewhere else
-const read: RequestHandler = (req, res) => {
-  const parsedId = Number.parseInt(req.params.id);
-
-  const program = programs.find((p) => p.id === parsedId);
-
-  if (program != null) {
-    res.json(program);
-  } else {
-    res.sendStatus(404);
+    // Respond with the programs in JSON format
+    res.json(programs);
+  } catch (err) {
+    // Pass any errors to the error-handling middleware
+    next(err);
   }
 };
 
-export default { browse, read };
+const read: RequestHandler = async (req, res, next) => {
+  try {
+    // Fetch a specific program based on the provided ID
+    const programsId = Number(req.params.id);
+    const programs = await ProgramRepository.read(programsId);
+
+    // If the programs is not found, respond with HTTP 404 (Not Found)
+    // Otherwise, respond with the programs in JSON format
+    if (programs == null) {
+      res.sendStatus(404);
+    } else {
+      res.json(programs);
+    }
+  } catch (err) {
+    // Pass any errors to the error-handling middleware
+    next(err);
+  }
+};
+
+const edit: RequestHandler = async (req, res, next) => {
+  try {
+    // Update a specific category based on the provided ID
+    const programs = {
+      id: Number(req.params.id),
+      title: req.body.title,
+      synopsis: req.body.synopsis,
+    };
+
+    const affectedRows = await ProgramRepository.update(programs);
+
+    // If the programs is not found, respond with HTTP 404 (Not Found)
+    // Otherwise, respond with the programs in JSON format
+    if (affectedRows === 0) {
+      res.sendStatus(404);
+    } else {
+      res.sendStatus(204);
+    }
+  } catch (err) {
+    // Pass any errors to the error-handling middleware
+    next(err);
+  }
+};
+
+const add: RequestHandler = async (req, res, next) => {
+  try {
+    // Extract the programs data from the request body
+    const newPrograms = {
+      id: Number(req.params.id),
+      title: req.body.title,
+    };
+
+    // Create the programs
+    const insertId = await ProgramRepository.create(newPrograms);
+
+    // Respond with HTTP 201 (Created) and the ID of the newly inserted item
+    res.status(201).json({ insertId });
+  } catch (err) {
+    // Pass any errors to the error-handling middleware
+    next(err);
+  }
+};
+
+const destroy: RequestHandler = async (req, res, next) => {
+  try {
+    // Delete a specific programs based on the provided ID
+    const programsId = Number(req.params.id);
+
+    await ProgramRepository.delete(programsId);
+
+    // Respond with HTTP 204 (No Content) anyway
+    res.sendStatus(204);
+  } catch (err) {
+    // Pass any errors to the error-handling middleware
+    next(err);
+  }
+};
+
+const validate: RequestHandler = (req, res, next) => {
+  type ValidationError = {
+    field: string;
+    message: string;
+  };
+
+  const errors: ValidationError[] = [];
+
+  const { title } = req.body;
+
+  // put your validation rules here
+  if (title === "") {
+    errors.push({ field: "title", message: "The field is required" });
+  } else if (title.length > 255) {
+    errors.push({
+      field: "title",
+      message: "Should contain less than 255 characters",
+    });
+  }
+
+  if (errors.length === 0) {
+    next();
+  } else {
+    res.status(400).json({ validationErrors: errors });
+  }
+};
+
+// Export them to import them somewhere else
+
+export default { browse, read, edit, add, destroy, validate };
